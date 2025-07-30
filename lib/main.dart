@@ -4,6 +4,10 @@ import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import 'dart:async';
 
+import 'file_download_stub.dart'
+  if (dart.library.html) 'file_download_web.dart'
+  if (dart.library.io) 'file_download_mobile.dart';
+
 // Conditional imports for file picking
 import 'file_picker_stub.dart'
     if (dart.library.html) 'file_picker_web.dart'

@@ -2,6 +2,7 @@
 import 'dart:typed_data';
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
+import 'dart:async'; // ✅ Needed for Completer
 
 Future<Map<String, dynamic>?> pickFile() async {
   final uploadInput = html.FileUploadInputElement()..accept = '.pdf';
