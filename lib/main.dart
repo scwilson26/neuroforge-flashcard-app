@@ -4,16 +4,13 @@ import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import 'dart:async';
 
-// Web-specific imports
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
-
-// Mobile-specific imports
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
+// Conditional imports for file picking
+import 'file_picker_stub.dart'
+    if (dart.library.html) 'file_picker_web.dart'
+    if (dart.library.io) 'file_picker_mobile.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -24,8 +21,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'NeuroForge Flashcards',
       home: Scaffold(
-        appBar: AppBar(title: Text('NeuroForge Study Pack Generator')),
-        body: FlashcardUploader(),
+        appBar: AppBar(title: const Text('NeuroForge Study Pack Generator')),
+        body: const FlashcardUploader(),
       ),
     );
   }
@@ -45,37 +42,15 @@ class _FlashcardUploaderState extends State<FlashcardUploader> {
   double uploadProgress = 0.0;
   bool showDownloadButton = false;
 
-  void pickFile() async {
-    if (kIsWeb) {
-      final uploadInput = html.FileUploadInputElement()..accept = '.pdf';
-      uploadInput.click();
-
-      uploadInput.onChange.listen((event) {
-        final file = uploadInput.files!.first;
-        final reader = html.FileReader();
-
-        reader.onLoadEnd.listen((e) {
-          setState(() {
-            fileBytes = reader.result as Uint8List;
-            fileName = file.name;
-            status = "Selected: $fileName";
-            showDownloadButton = false;
-          });
-        });
-
-        reader.readAsArrayBuffer(file);
+  void selectAndLoadFile() async {
+    final result = await pickFile();
+    if (result != null) {
+      setState(() {
+        fileBytes = result['bytes'];
+        fileName = result['name'];
+        status = "Selected: $fileName";
+        showDownloadButton = false;
       });
-    } else {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
-      if (result != null) {
-        final pickedFile = result.files.first;
-        setState(() {
-          fileBytes = pickedFile.bytes;
-          fileName = pickedFile.name;
-          status = "Selected: $fileName";
-          showDownloadButton = false;
-        });
-      }
     }
   }
 
@@ -88,7 +63,7 @@ class _FlashcardUploaderState extends State<FlashcardUploader> {
     });
 
     Timer? progressTimer;
-    progressTimer = Timer.periodic(Duration(milliseconds: 100), (_) {
+    progressTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       setState(() {
         if (uploadProgress < 0.95) {
           uploadProgress += 0.01;
@@ -108,20 +83,9 @@ class _FlashcardUploaderState extends State<FlashcardUploader> {
       setState(() => uploadProgress = 1.0);
 
       if (streamedRequest.statusCode == 200) {
-        if (kIsWeb) {
-          final blob = html.Blob([data]);
-          final url = html.Url.createObjectUrlFromBlob(blob);
-          final anchor = html.AnchorElement(href: url)
-            ..setAttribute("download", "study_pack.zip")
-            ..click();
-          html.Url.revokeObjectUrl(url);
+        await handleFileDownload(data);
 
-          await Future.delayed(Duration(milliseconds: 500));
-        } else {
-          // Show message for mobile (add actual file saving logic if needed)
-          print("✅ File received. You can now handle it on mobile.");
-        }
-
+        await Future.delayed(const Duration(milliseconds: 500));
         setState(() {
           status = "✅ Study pack ready!";
           uploadProgress = 0.0;
@@ -154,19 +118,19 @@ class _FlashcardUploaderState extends State<FlashcardUploader> {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: AnimatedContainer(
-                duration: Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 200),
                 child: LinearProgressIndicator(value: uploadProgress),
               ),
             ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: pickFile,
-            child: Text('Select PDF'),
+            onPressed: selectAndLoadFile,
+            child: const Text('Select PDF'),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           ElevatedButton(
             onPressed: generateZip,
-            child: Text('Generate Study Pack (.zip)'),
+            child: const Text('Generate Study Pack (.zip)'),
           ),
         ],
       ),
