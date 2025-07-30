@@ -1,17 +1,16 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import 'dart:async';
 
+// Conditional imports
 import 'file_download_stub.dart'
   if (dart.library.html) 'file_download_web.dart'
   if (dart.library.io) 'file_download_mobile.dart';
 
-// Conditional imports for file picking
 import 'file_picker_stub.dart'
-    if (dart.library.html) 'file_picker_web.dart'
-    if (dart.library.io) 'file_picker_mobile.dart';
+  if (dart.library.html) 'file_picker_web.dart'
+  if (dart.library.io) 'file_picker_mobile.dart';
 
 void main() {
   runApp(const MyApp());
@@ -47,14 +46,19 @@ class _FlashcardUploaderState extends State<FlashcardUploader> {
   bool showDownloadButton = false;
 
   void selectAndLoadFile() async {
-    final result = await pickFile();
-    if (result != null) {
-      setState(() {
-        fileBytes = result['bytes'];
-        fileName = result['name'];
-        status = "Selected: $fileName";
-        showDownloadButton = false;
-      });
+    try {
+      final result = await pickPdfFile();
+      if (result != null) {
+        setState(() {
+          fileBytes = result['bytes'];
+          fileName = result['name'];
+          status = "Selected: $fileName";
+          showDownloadButton = false;
+        });
+      }
+    } catch (e) {
+      setState(() => status = "❌ File pick failed");
+      print("File pick error: $e");
     }
   }
 

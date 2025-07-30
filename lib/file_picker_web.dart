@@ -1,10 +1,8 @@
-// lib/platform/file_picker_web.dart
-import 'dart:typed_data';
-// ignore: avoid_web_libraries_in_flutter
+import 'dart:async'; // ✅ THIS IS MISSING
 import 'dart:html' as html;
-import 'dart:async'; // ✅ Needed for Completer
+import 'dart:typed_data';
 
-Future<Map<String, dynamic>?> pickFile() async {
+Future<Map<String, dynamic>?> pickPdfFile() async {
   final uploadInput = html.FileUploadInputElement()..accept = '.pdf';
   uploadInput.click();
 
@@ -14,10 +12,8 @@ Future<Map<String, dynamic>?> pickFile() async {
     final reader = html.FileReader();
 
     reader.onLoadEnd.listen((e) {
-      completer.complete({
-        'bytes': reader.result as Uint8List,
-        'name': file.name,
-      });
+      final data = reader.result as Uint8List;
+      completer.complete({'bytes': data, 'name': file.name});
     });
 
     reader.readAsArrayBuffer(file);

@@ -1,6 +1,8 @@
 // file_download_web.dart
 import 'dart:html' as html;
 import 'dart:typed_data';
+import 'dart:async';
+
 
 Future<void> handleFileDownload(Uint8List data) async {
   final blob = html.Blob([data]);
